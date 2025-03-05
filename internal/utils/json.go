@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/grozaqueen/merch-service/internal/errs"
+	"github.com/grozaqueen/julse/internal/errs"
 )
 
 type Response struct {

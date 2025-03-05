@@ -1,7 +1,7 @@
 package user
 
 import (
-	"github.com/grozaqueen/merch-service/internal/model"
+	"github.com/grozaqueen/julse/internal/model"
 )
 
 type UsersSignUpRequest struct {

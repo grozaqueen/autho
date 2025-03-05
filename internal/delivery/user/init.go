@@ -2,12 +2,12 @@ package user
 
 import (
 	"context"
-	"github.com/grozaqueen/merch-service/internal/usecase/user"
+	"github.com/grozaqueen/julse/internal/usecase/user"
 	"github.com/segmentio/kafka-go"
 	"log/slog"
 
-	"github.com/grozaqueen/merch-service/internal/errs"
-	"github.com/grozaqueen/merch-service/internal/utils"
+	"github.com/grozaqueen/julse/internal/errs"
+	"github.com/grozaqueen/julse/internal/utils"
 )
 
 type sessionCreator interface {

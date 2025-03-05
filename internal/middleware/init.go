@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"context"
-	"github.com/grozaqueen/merch-service/internal/model"
+	"github.com/grozaqueen/julse/internal/model"
 )
 
 type sessionGetter interface {

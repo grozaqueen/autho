@@ -5,8 +5,8 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/grozaqueen/merch-service/internal/errs"
-	"github.com/grozaqueen/merch-service/internal/model"
+	"github.com/grozaqueen/julse/internal/errs"
+	"github.com/grozaqueen/julse/internal/model"
 	"github.com/jackc/pgx/v5"
 )
 

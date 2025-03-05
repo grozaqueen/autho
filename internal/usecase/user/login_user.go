@@ -4,9 +4,9 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/grozaqueen/merch-service/internal/errs"
-	"github.com/grozaqueen/merch-service/internal/model"
-	"github.com/grozaqueen/merch-service/internal/utils"
+	"github.com/grozaqueen/julse/internal/errs"
+	"github.com/grozaqueen/julse/internal/model"
+	"github.com/grozaqueen/julse/internal/utils"
 )
 
 func (us *UsersService) LoginUser(ctx context.Context, user model.User) (model.User, error) {

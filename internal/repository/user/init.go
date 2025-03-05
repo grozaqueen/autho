@@ -1,7 +1,7 @@
 package user
 
 import (
-	"github.com/grozaqueen/merch-service/internal/repository/pool"
+	"github.com/grozaqueen/julse/internal/repository/pool"
 	"log/slog"
 )
 

@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/grozaqueen/merch-service/internal/errs"
-	"github.com/grozaqueen/merch-service/internal/utils"
+	"github.com/grozaqueen/julse/internal/errs"
+	"github.com/grozaqueen/julse/internal/utils"
 )
 
 func (u *UsersDelivery) CreateUser(w http.ResponseWriter, r *http.Request) {

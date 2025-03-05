@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/grozaqueen/merch-service/internal/model"
-	"github.com/grozaqueen/merch-service/internal/utils"
+	"github.com/grozaqueen/julse/internal/model"
+	"github.com/grozaqueen/julse/internal/utils"
 )
 
 // todo сессиии тут

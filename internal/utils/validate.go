@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"unicode"
 
-	"github.com/grozaqueen/merch-service/internal/errs"
+	"github.com/grozaqueen/julse/internal/errs"
 )
 
 func ValidateRegistration(email string, password string, repeatPassword string) error {

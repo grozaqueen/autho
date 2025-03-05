@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/grozaqueen/merch-service/internal/errs"
-	"github.com/grozaqueen/merch-service/internal/utils"
+	"github.com/grozaqueen/julse/internal/errs"
+	"github.com/grozaqueen/julse/internal/utils"
 )
 
 func AuthMiddleware(sessionGetter sessionGetter, errResolver errs.GetErrorCode) func(http.Handler) http.Handler {
