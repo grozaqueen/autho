@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	mainService "github.com/grozaqueen/julse/internal/apps"
+	mainService "github.com/grozaqueen/julse/internal/apps/main_service"
 	"github.com/joho/godotenv"
 )
 
