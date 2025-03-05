@@ -1,0 +1,39 @@
+package user
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+
+	"github.com/grozaqueen/merch-service/internal/errs"
+	"github.com/grozaqueen/merch-service/internal/model"
+	"github.com/jackc/pgx/v5"
+)
+
+func (us *UsersStore) GetUserByEmail(ctx context.Context, userModel model.User) (model.User, error) {
+	const query = `
+		select id, username, password, city, avatar_url from users where users.email =$1;	
+	`
+
+	var user model.User
+
+	err := us.db.QueryRow(ctx, query, userModel.Email).
+		Scan(&user.ID, &user.Email, &user.Password)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			us.log.Error("[ UsersStore.GetUserByEmail ] Юзер не найден",
+				slog.String("error", err.Error()),
+			)
+
+			return model.User{}, errs.UserDoesNotExist
+		}
+
+		us.log.Error("[ UsersStore.GetUserByEmail ] Ошибка при получении юзера из бд",
+			slog.String("error", err.Error()),
+		)
+
+		return model.User{}, err
+	}
+
+	return user, nil
+}
