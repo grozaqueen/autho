@@ -1,18 +1,29 @@
 package user
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 
 	"github.com/grozaqueen/julse/internal/errs"
 	"github.com/grozaqueen/julse/internal/utils"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (u *UsersDelivery) CreateUser(w http.ResponseWriter, r *http.Request) {
+	requestID, err := utils.GetContextRequestID(r.Context())
+	if err != nil {
+		u.log.Error("[UsersDelivery.CreateUser] No request ID")
+		utils.WriteErrorJSONByError(w, err, u.errResolver)
+
+		return
+	}
+
+	u.log.Info("[UsersDelivery.CreateUser] Started executing", slog.Any("request-id", requestID))
+
 	var req UsersSignUpRequest
 
-	if err := utils.ValidateRegistration(req.Email, req.Password, req.RepeatPassword); err != nil {
+	if err = utils.ValidateRegistration(req.Email, req.Username, req.Password, req.RepeatPassword); err != nil {
 		err, code := u.errResolver.Get(err)
 		utils.WriteJSON(w, code, errs.HTTPErrorResponse{
 			ErrorMessage: err.Error(),
@@ -20,10 +31,44 @@ func (u *UsersDelivery) CreateUser(w http.ResponseWriter, r *http.Request) {
 		u.log.Error("[ UsersDelivery.CreateUser ] Валидация регистрации не прошла успешно", slog.String("error", err.Error()))
 		return
 	}
+	newCtx, err := utils.AddMetadataRequestID(r.Context())
+	if err != nil {
+		err, code := u.errResolver.Get(err)
+		utils.WriteJSON(w, code, errs.HTTPErrorResponse{
+			ErrorMessage: err.Error(),
+		})
+	}
 
-	usersDefaultResponse, err := u.userService.CreateUser(context.Background(), req.ToModel())
+	usersDefaultResponse, err := u.userClientGrpc.CreateUser(newCtx, req.ToGrpcSignupRequest())
 
-	sessionID, err := u.sessionService.Create(r.Context(), usersDefaultResponse.ID)
+	grpcErr, ok := status.FromError(err)
+	if err != nil {
+		if ok {
+			switch grpcErr.Code() {
+			case codes.InvalidArgument:
+				u.log.Error("[ UsersDelivery.CreateUser ] Пользователь уже существует", slog.Any("error", err.Error()))
+
+				utils.WriteErrorJSONByError(w, errs.UserAlreadyExists, u.errResolver)
+
+				return
+
+			default:
+				u.log.Error("[ UsersDelivery.CreateUser ] Неизвестная ошибка", slog.String("error", err.Error()))
+
+				utils.WriteErrorJSONByError(w, errs.InternalServerError, u.errResolver)
+
+				return
+			}
+		}
+
+		u.log.Error("[ UsersDelivery.CreateUser ] Не удалось получить код ошибки")
+
+		utils.WriteErrorJSONByError(w, errs.InternalServerError, u.errResolver)
+
+		return
+	}
+
+	sessionID, err := u.sessionService.Create(r.Context(), usersDefaultResponse.GetUserId())
 	if err != nil {
 		err, code := u.errResolver.Get(err)
 		utils.WriteJSON(w, code, errs.HTTPErrorResponse{
@@ -32,7 +77,7 @@ func (u *UsersDelivery) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 		u.log.Error("[ UsersDelivery.CreateUser ] Ошибка при создании сессии ",
 			slog.String("error", err.Error()),
-			slog.Any("userId", usersDefaultResponse.ID),
+			slog.Any("userId", usersDefaultResponse.UserId),
 		)
 
 		return
@@ -41,7 +86,8 @@ func (u *UsersDelivery) CreateUser(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, utils.SetSessionCookie(sessionID))
 
 	utils.WriteJSON(w, http.StatusOK, UsersDefaultResponse{
-		UserID: usersDefaultResponse.ID,
-		Email:  usersDefaultResponse.Email,
+		UserID:   usersDefaultResponse.UserId,
+		Username: usersDefaultResponse.Username,
+		City:     usersDefaultResponse.City,
 	})
 }

@@ -1,8 +1,10 @@
 package model
 
 type User struct {
-	ID       uint32
-	Email    string
-	Password string
-	Balance  int
+	ID        uint32
+	Email     string
+	Username  string
+	City      string
+	AvatarUrl string
+	Password  string
 }

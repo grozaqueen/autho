@@ -1,7 +1,6 @@
 package user
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 
@@ -12,9 +11,27 @@ import (
 )
 
 func (u *UsersDelivery) LoginUser(w http.ResponseWriter, r *http.Request) {
+	requestID, err := utils.GetContextRequestID(r.Context())
+	if err != nil {
+		u.log.Error("[UsersDelivery.LoginUser] No request ID")
+		utils.WriteErrorJSONByError(w, err, u.errResolver)
+
+		return
+	}
+
+	u.log.Info("[UsersDelivery.LoginUser] Started executing", slog.Any("request-id", requestID))
+
 	var req UsersLoginRequest
 
-	usersDefaultResponse, err := u.userService.LoginUser(context.Background(), req.ToModel())
+	newCtx, err := utils.AddMetadataRequestID(r.Context())
+	if err != nil {
+		err, code := u.errResolver.Get(err)
+		utils.WriteJSON(w, code, errs.HTTPErrorResponse{
+			ErrorMessage: err.Error(),
+		})
+	}
+
+	usersDefaultResponse, err := u.userClientGrpc.LoginUser(newCtx, req.ToGrpcLoginRequest())
 
 	if err != nil {
 		u.log.Error("[ UsersDelivery.LoginUser ] До вывода кода", slog.String("error", err.Error()), slog.String("func", "u.userClientGrpc.LoginUser"))
@@ -57,7 +74,7 @@ func (u *UsersDelivery) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID, err := u.sessionService.Create(r.Context(), usersDefaultResponse.ID)
+	sessionID, err := u.sessionService.Create(r.Context(), usersDefaultResponse.UserId)
 	if err != nil {
 		err, code := u.errResolver.Get(err)
 		utils.WriteJSON(w, code, errs.HTTPErrorResponse{
@@ -70,7 +87,8 @@ func (u *UsersDelivery) LoginUser(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, utils.SetSessionCookie(sessionID))
 
 	utils.WriteJSON(w, http.StatusOK, UsersDefaultResponse{
-		UserID: usersDefaultResponse.ID,
-		Email:  usersDefaultResponse.Email,
+		UserID:   usersDefaultResponse.UserId,
+		Username: usersDefaultResponse.Username,
+		City:     usersDefaultResponse.City,
 	})
 }

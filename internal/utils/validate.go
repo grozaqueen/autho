@@ -7,13 +7,17 @@ import (
 	"github.com/grozaqueen/julse/internal/errs"
 )
 
-func ValidateRegistration(email string, password string, repeatPassword string) error {
+func ValidateRegistration(email string, username string, password string, repeatPassword string) error {
 	if err := ValidateEmailAndPassword(email, password); err != nil {
 		return err
 	}
 
 	if password != repeatPassword {
 		return errs.PasswordsDoNotMatch
+	}
+
+	if !IsValidUsername(username) {
+		return errs.InvalidUsernameFormat
 	}
 
 	return nil
@@ -35,6 +39,12 @@ func IsValidEmail(email string) bool {
 	re := regexp.MustCompile(emailRegex)
 
 	return re.MatchString(email)
+}
+
+func IsValidUsername(username string) bool {
+	re := regexp.MustCompile(`[a-zA-Zа-яА-ЯёЁ0-9 _-]{2,40}$`)
+
+	return re.MatchString(username)
 }
 
 func isValidPassword(password string) bool {

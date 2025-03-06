@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package user;
-option go_package = "https://github.com/go-park-mail-ru/2024_2_kotyari/user/grpc_gen";
+option go_package = "https://github.com/grozaqueen/julse/api/protos/user/gen";
 
 import "get_user_by_id.proto";
 import "login.proto";

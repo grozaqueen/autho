@@ -2,8 +2,7 @@ package user
 
 import (
 	"context"
-	"github.com/grozaqueen/julse/internal/usecase/user"
-	"github.com/segmentio/kafka-go"
+	grpc_gen "github.com/grozaqueen/julse/api/protos/user/gen"
 	"log/slog"
 
 	"github.com/grozaqueen/julse/internal/errs"
@@ -15,24 +14,19 @@ type sessionCreator interface {
 }
 
 type UsersDelivery struct {
-	userService    user.UsersService
+	userClientGrpc grpc_gen.UserServiceClient
 	inputValidator *utils.InputValidator
 	sessionService sessionCreator
 	errResolver    errs.GetErrorCode
 	log            *slog.Logger
 }
 
-func NewUsersDelivery(userManager user.UsersService, inputValidator *utils.InputValidator, sessionService sessionCreator, errResolver errs.GetErrorCode, log *slog.Logger) *UsersDelivery {
+func NewUsersDelivery(userManager grpc_gen.UserServiceClient, inputValidator *utils.InputValidator, sessionService sessionCreator, errResolver errs.GetErrorCode, log *slog.Logger) *UsersDelivery {
 	return &UsersDelivery{
-		userService:    userManager,
+		userClientGrpc: userManager,
 		inputValidator: inputValidator,
 		sessionService: sessionService,
 		errResolver:    errResolver,
 		log:            log,
 	}
-}
-
-type MessageProducer struct {
-	writer *kafka.Writer
-	log    *slog.Logger
 }

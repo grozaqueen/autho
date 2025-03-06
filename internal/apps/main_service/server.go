@@ -10,7 +10,6 @@ import (
 	usergrpc "github.com/grozaqueen/julse/api/protos/user/gen"
 	"github.com/grozaqueen/julse/internal/configs"
 	"github.com/grozaqueen/julse/internal/configs/logger"
-	postgres "github.com/grozaqueen/julse/internal/configs/postgresql"
 	"github.com/grozaqueen/julse/internal/configs/redis"
 	sessionsDeliveryLib "github.com/grozaqueen/julse/internal/delivery/sessions"
 	userDeliveryLib "github.com/grozaqueen/julse/internal/delivery/user"
@@ -48,19 +47,10 @@ type Server struct {
 	log      *slog.Logger
 }
 
-type csrfDelivery interface {
-	GetCsrf(w http.ResponseWriter, r *http.Request)
-}
-
 func NewServer() (*Server, error) {
 	log := logger.InitLogger()
 	router := mux.NewRouter()
 	v, err := configs.SetupViper()
-	if err != nil {
-		return nil, err
-	}
-
-	dbPool, err := postgres.LoadPgxPool()
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +117,7 @@ func (s *Server) setupRoutes() {
 func (s *Server) Run() error {
 	s.setupRoutes()
 
-	handler := middlewares.CorsMiddleware(s.r)
+	handler := middlewares.StartMiddleware(s.r)
 
 	s.log.Info("starting  server", slog.String("address:", s.cfg.Port))
 	return http.ListenAndServe(fmt.Sprintf(":%s", s.cfg.Port), handler)

@@ -5,8 +5,7 @@ import (
 	"fmt"
 	proto "github.com/grozaqueen/julse/api/protos/user/gen"
 	"github.com/grozaqueen/julse/internal/configs"
-	"github.com/grozaqueen/julse/internal/configs/postgres"
-	userProducerLib "github.com/grozaqueen/julse/internal/delivery/user"
+	postgres "github.com/grozaqueen/julse/internal/configs/postgresql"
 	user2 "github.com/grozaqueen/julse/internal/grpc_api/user"
 	userRepoLib "github.com/grozaqueen/julse/internal/repository/user"
 	userServiceLib "github.com/grozaqueen/julse/internal/usecase/user"
@@ -38,7 +37,6 @@ func NewUsersApp(log *slog.Logger, grpcServer *grpc.Server,
 		return nil, err
 	}
 
-	kafkaCfg, err := configs.ParseKafkaViperConfig(kafkaConf)
 	if err != nil {
 		slog.Error("UsersApp [NewUsersApp] Failed to parse kafka cfg")
 
@@ -54,8 +52,7 @@ func NewUsersApp(log *slog.Logger, grpcServer *grpc.Server,
 	inputValidator := utils.NewInputValidator()
 
 	userRepo := userRepoLib.NewUsersStore(dbPool, log)
-	userProducer := userProducerLib.NewMessageProducer(kafkaCfg, log)
-	userService := userServiceLib.NewUserService(userRepo, userProducer, inputValidator, log)
+	userService := userServiceLib.NewUserService(userRepo, inputValidator, log)
 
 	delivery := user2.NewUsersGrpc(userService, userRepo, log)
 
