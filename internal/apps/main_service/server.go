@@ -50,6 +50,7 @@ type Server struct {
 func NewServer() (*Server, error) {
 	log := logger.InitLogger()
 	router := mux.NewRouter()
+	router.Use(middlewares.RequestIDMiddleware)
 	v, err := configs.SetupViper()
 	if err != nil {
 		return nil, err
@@ -112,6 +113,22 @@ func (s *Server) setupRoutes() {
 
 	authSub.Use(middlewares.RequestIDMiddleware)
 	authSub.Use(middlewares.AuthMiddleware(s.sessions, errResolver))
+	s.r.HandleFunc("/routes", func(w http.ResponseWriter, r *http.Request) {
+		var routes []string
+		s.r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+			path, err := route.GetPathTemplate()
+			if err == nil {
+				routes = append(routes, path)
+			}
+			return nil
+		})
+
+		w.Header().Set("Content-Type", "text/plain")
+		fmt.Fprintln(w, "Available routes:")
+		for _, route := range routes {
+			fmt.Fprintln(w, route)
+		}
+	})
 }
 
 func (s *Server) Run() error {

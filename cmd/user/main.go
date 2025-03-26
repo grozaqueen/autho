@@ -1,24 +1,17 @@
 package main
 
 import (
-	"fmt"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"log"
-	"net/http"
-	"time"
-
-	"github.com/gorilla/mux"
 	"github.com/grozaqueen/julse/internal/apps/user"
 	"github.com/grozaqueen/julse/internal/configs"
 	"github.com/grozaqueen/julse/internal/configs/logger"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
+	"log"
 )
 
 const (
 	userService = "user_go"
 	configFile  = ".env"
-	kafka       = "kafka"
 )
 
 // todo вынос в apps
@@ -34,23 +27,12 @@ func main() {
 	}
 
 	serviceConf := viper.GetStringMap(userService)
-	kafkaConf := viper.GetStringMap(kafka)
 
 	slogLog := logger.InitLogger()
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor())
 
-	app, err := user.NewUsersApp(slogLog, server, serviceConf, kafkaConf)
-
-	router := mux.NewRouter()
-	router.PathPrefix("/metrics").Handler(promhttp.Handler())
-	serverProm := http.Server{Handler: router, Addr: fmt.Sprintf(":%d", 8081), ReadHeaderTimeout: 10 * time.Second}
-
-	go func() {
-		if err = serverProm.ListenAndServe(); err != nil {
-			log.Println("fail auth.ListenAndServe")
-		}
-	}()
+	app, err := user.NewUsersApp(slogLog, server, serviceConf)
 
 	err = app.Run()
 	if err != nil {

@@ -35,7 +35,7 @@ func ValidateEmailAndPassword(email string, password string) error {
 }
 
 func IsValidEmail(email string) bool {
-	const emailRegex = `(?i)^[a-z0-9а-яё._%+-]+@[a-z0-9а-яё.-]+\.[a-zа-я]{2,}$`
+	const emailRegex = `^[a-zA-Z0-9а-яё._%+-]+@[a-zA-Z0-9а-яё.-]+\.[a-zA-Zа-я]{2,}$`
 	re := regexp.MustCompile(emailRegex)
 
 	return re.MatchString(email)

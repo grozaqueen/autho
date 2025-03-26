@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/grozaqueen/julse/internal/model"
@@ -15,7 +16,7 @@ func (us *UsersService) CreateUser(ctx context.Context, user model.User) (model.
 	}
 
 	us.log.Info("[UsersService.CreateUser] Started executing, requestID", slog.Any("request-id", requestID))
-
+	fmt.Println("[UsersService.CreateUser] Started executing, requestI")
 	user.Username = us.inputValidator.SanitizeString(user.Username)
 	user.Email = us.inputValidator.SanitizeString(user.Email)
 	user.Password = us.inputValidator.SanitizeString(user.Password)

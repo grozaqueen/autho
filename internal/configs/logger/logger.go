@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -13,7 +14,7 @@ func InitLogger() *slog.Logger {
 		logger *slog.Logger
 		env    = os.Getenv("APP_ENV")
 	)
-
+	fmt.Println("logger")
 	switch env {
 	case "local":
 		logger = newLogger(slog.LevelDebug)

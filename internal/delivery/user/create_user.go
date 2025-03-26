@@ -23,14 +23,14 @@ func (u *UsersDelivery) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	var req UsersSignUpRequest
 
-	if err = utils.ValidateRegistration(req.Email, req.Username, req.Password, req.RepeatPassword); err != nil {
-		err, code := u.errResolver.Get(err)
-		utils.WriteJSON(w, code, errs.HTTPErrorResponse{
-			ErrorMessage: err.Error(),
-		})
-		u.log.Error("[ UsersDelivery.CreateUser ] Валидация регистрации не прошла успешно", slog.String("error", err.Error()))
-		return
-	}
+	//if err = utils.ValidateRegistration(req.Email, req.Username, req.Password, req.RepeatPassword); err != nil {
+	//	err, code := u.errResolver.Get(err)
+	//	utils.WriteJSON(w, code, errs.HTTPErrorResponse{
+	//		ErrorMessage: err.Error(),
+	//	})
+	//	u.log.Error("[ UsersDelivery.CreateUser ] Валидация регистрации не прошла успешно", slog.String("error", err.Error()))
+	//	return
+	//}
 	newCtx, err := utils.AddMetadataRequestID(r.Context())
 	if err != nil {
 		err, code := u.errResolver.Get(err)

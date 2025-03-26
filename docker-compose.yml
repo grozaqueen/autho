@@ -1,0 +1,77 @@
+services:
+  user_go:
+    build:
+      context: .
+      dockerfile: ./cmd/user/Dockerfile
+    ports:
+      - "8001:8001"
+      - "8081:8081"
+    image: user-go-image
+    container_name: user_go
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      - pg_db
+      - redis_service
+      - main_go
+
+  main_go:
+    build:
+      context: .
+      dockerfile: ./cmd/main/Dockerfile
+    ports:
+      - "8000:8000"
+      - "8080:8080"
+    image: main-go-image
+    container_name: main_go
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      - pg_db
+      - redis_service
+
+  pg_db:
+    image: postgres:16.4
+    ports:
+      - "54320:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - ./assets/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pg_data:/var/lib/postgresql/data/
+    container_name: pg_db
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  redis_service:
+    image: redis:alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    env_file:
+      - .env
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    container_name: redis_service
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  pg_data:
+  redis_data:
+  go_back:
+
+
+networks:
+  app-network:
+    driver: bridge

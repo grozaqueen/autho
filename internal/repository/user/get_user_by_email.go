@@ -20,13 +20,13 @@ func (us *UsersStore) GetUserByEmail(ctx context.Context, userModel model.User) 
 	us.log.Info("[UsersStore.GetUserByEmail] Started executing", slog.Any("request-id", requestID))
 
 	const query = `
-		select id, username, password, city, avatar_url from users where users.email =$1;	
+		select id, username, password, city from users where users.email =$1;	
 	`
 
 	var user model.User
 
 	err = us.db.QueryRow(ctx, query, userModel.Email).
-		Scan(&user.ID, &user.Username, &user.Password, &user.City, &user.AvatarUrl)
+		Scan(&user.ID, &user.Username, &user.Password, &user.City)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			us.log.Error("[ UsersStore.GetUserByEmail ] Юзер не найден",

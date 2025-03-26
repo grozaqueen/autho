@@ -29,16 +29,10 @@ type UsersApp struct {
 }
 
 func NewUsersApp(log *slog.Logger, grpcServer *grpc.Server,
-	serviceConf map[string]any, kafkaConf map[string]any) (*UsersApp, error) {
+	serviceConf map[string]any) (*UsersApp, error) {
 	c, err := configs.ParseServiceViperConfig(serviceConf)
 	if err != nil {
 		slog.Error("UsersApp [NewUsersApp] Failed to parse service cfg")
-
-		return nil, err
-	}
-
-	if err != nil {
-		slog.Error("UsersApp [NewUsersApp] Failed to parse kafka cfg")
 
 		return nil, err
 	}
