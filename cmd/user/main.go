@@ -14,7 +14,6 @@ const (
 	configFile  = ".env"
 )
 
-// todo вынос в apps
 func main() {
 	err := godotenv.Load(configFile)
 	if err != nil {

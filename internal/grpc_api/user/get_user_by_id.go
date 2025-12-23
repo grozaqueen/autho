@@ -20,6 +20,6 @@ func (um *UsersGrpc) GetUserById(ctx context.Context, in *proto.GetUserByIdReque
 		UserId:    userModel.ID,
 		Username:  userModel.Username,
 		City:      userModel.City,
-		AvatarUrl: userModel.AvatarUrl,
+		// AvatarUrl: userModel.AvatarUrl,
 	}, nil
 }

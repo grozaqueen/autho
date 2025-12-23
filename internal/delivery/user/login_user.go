@@ -1,6 +1,7 @@
 package user
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -15,7 +16,6 @@ func (u *UsersDelivery) LoginUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		u.log.Error("[UsersDelivery.LoginUser] No request ID")
 		utils.WriteErrorJSONByError(w, err, u.errResolver)
-
 		return
 	}
 
@@ -23,24 +23,38 @@ func (u *UsersDelivery) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	var req UsersLoginRequest
 
+	// ✅ ДОБАВИЛИ: декодирование тела запроса в req
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		u.log.Error("[UsersDelivery.LoginUser] Failed to decode body", slog.String("error", err.Error()))
+		// если errs.BadRequest у тебя нет — замени на подходящую ошибку (или http.StatusBadRequest напрямую)
+		utils.WriteErrorJSONByError(w, errs.InvalidJSONFormat, u.errResolver)
+		return
+	}
+
 	newCtx, err := utils.AddMetadataRequestID(r.Context())
 	if err != nil {
 		err, code := u.errResolver.Get(err)
 		utils.WriteJSON(w, code, errs.HTTPErrorResponse{
 			ErrorMessage: err.Error(),
 		})
+		return // ✅ важно
 	}
 
 	usersDefaultResponse, err := u.userClientGrpc.LoginUser(newCtx, req.ToGrpcLoginRequest())
 
 	if err != nil {
-		u.log.Error("[ UsersDelivery.LoginUser ] До вывода кода", slog.String("error", err.Error()), slog.String("func", "u.userClientGrpc.LoginUser"))
+		u.log.Error("[ UsersDelivery.LoginUser ] До вывода кода",
+			slog.String("error", err.Error()),
+			slog.String("func", "u.userClientGrpc.LoginUser"),
+		)
 
 		grpcErr, ok := status.FromError(err)
 		if ok {
 			u.log.Error("[ UsersDelivery.LoginUser ] ",
-				slog.String("error", err.Error()), slog.String("func", "u.userClientGrpc.LoginUser"),
-				slog.Any("code", grpcErr.Code()))
+				slog.String("error", err.Error()),
+				slog.String("func", "u.userClientGrpc.LoginUser"),
+				slog.Any("code", grpcErr.Code()),
+			)
 
 			switch grpcErr.Code() {
 			case codes.NotFound:
@@ -70,7 +84,11 @@ func (u *UsersDelivery) LoginUser(w http.ResponseWriter, r *http.Request) {
 		utils.WriteJSON(w, http.StatusInternalServerError, errs.HTTPErrorResponse{
 			ErrorMessage: errs.InternalServerError.Error(),
 		})
-		u.log.Error("[ UsersDelivery.LoginUser ] ", slog.String("error", err.Error()), slog.String("func", "u.userClientGrpc.LoginUser"), slog.Int("code", code))
+		u.log.Error("[ UsersDelivery.LoginUser ] ",
+			slog.String("error", err.Error()),
+			slog.String("func", "u.userClientGrpc.LoginUser"),
+			slog.Int("code", code),
+		)
 		return
 	}
 

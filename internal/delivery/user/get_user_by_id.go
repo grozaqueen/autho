@@ -48,6 +48,5 @@ func (u *UsersDelivery) GetUserById(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, UsersDefaultResponse{
 		Username:  usersDefaultResponse.Username,
 		City:      usersDefaultResponse.City,
-		AvatarUrl: usersDefaultResponse.AvatarUrl,
 	})
 }

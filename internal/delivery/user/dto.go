@@ -21,7 +21,6 @@ type UsersDefaultResponse struct {
 	UserID    uint32 `json:"user_id"`
 	Username  string `json:"username"`
 	City      string `json:"city"`
-	AvatarUrl string `json:"avatar_url"`
 }
 
 func (us *UsersSignUpRequest) ToModel() model.User {

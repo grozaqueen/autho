@@ -1,6 +1,7 @@
 package user
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -15,7 +16,6 @@ func (u *UsersDelivery) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		u.log.Error("[UsersDelivery.CreateUser] No request ID")
 		utils.WriteErrorJSONByError(w, err, u.errResolver)
-
 		return
 	}
 
@@ -23,20 +23,26 @@ func (u *UsersDelivery) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	var req UsersSignUpRequest
 
-	//if err = utils.ValidateRegistration(req.Email, req.Username, req.Password, req.RepeatPassword); err != nil {
-	//	err, code := u.errResolver.Get(err)
-	//	utils.WriteJSON(w, code, errs.HTTPErrorResponse{
-	//		ErrorMessage: err.Error(),
-	//	})
-	//	u.log.Error("[ UsersDelivery.CreateUser ] Валидация регистрации не прошла успешно", slog.String("error", err.Error()))
-	//	return
-	//}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		u.log.Error("[UsersDelivery.CreateUser] Failed to decode body", slog.String("error", err.Error()))
+		utils.WriteErrorJSONByError(w, errs.InvalidJSONFormat, u.errResolver) // если у тебя нет errs.BadRequest — замени на подходящую ошибку
+		return
+	}
+
+	if err = utils.ValidateRegistration(req.Email, req.Username, req.Password, req.RepeatPassword); err != nil {
+		err, code := u.errResolver.Get(err)
+		utils.WriteJSON(w, code, errs.HTTPErrorResponse{ErrorMessage: err.Error()})
+		u.log.Error("[UsersDelivery.CreateUser] Validation failed", slog.String("error", err.Error()))
+		return
+	}
+
 	newCtx, err := utils.AddMetadataRequestID(r.Context())
 	if err != nil {
 		err, code := u.errResolver.Get(err)
 		utils.WriteJSON(w, code, errs.HTTPErrorResponse{
 			ErrorMessage: err.Error(),
 		})
+		return 
 	}
 
 	usersDefaultResponse, err := u.userClientGrpc.CreateUser(newCtx, req.ToGrpcSignupRequest())
@@ -46,25 +52,18 @@ func (u *UsersDelivery) CreateUser(w http.ResponseWriter, r *http.Request) {
 		if ok {
 			switch grpcErr.Code() {
 			case codes.InvalidArgument:
-				u.log.Error("[ UsersDelivery.CreateUser ] Пользователь уже существует", slog.Any("error", err.Error()))
-
+				u.log.Error("[UsersDelivery.CreateUser] User already exists", slog.Any("error", err.Error()))
 				utils.WriteErrorJSONByError(w, errs.UserAlreadyExists, u.errResolver)
-
 				return
-
 			default:
-				u.log.Error("[ UsersDelivery.CreateUser ] Неизвестная ошибка", slog.String("error", err.Error()))
-
+				u.log.Error("[UsersDelivery.CreateUser] Unknown error", slog.String("error", err.Error()))
 				utils.WriteErrorJSONByError(w, errs.InternalServerError, u.errResolver)
-
 				return
 			}
 		}
 
-		u.log.Error("[ UsersDelivery.CreateUser ] Не удалось получить код ошибки")
-
+		u.log.Error("[UsersDelivery.CreateUser] Failed to parse grpc error code")
 		utils.WriteErrorJSONByError(w, errs.InternalServerError, u.errResolver)
-
 		return
 	}
 
@@ -75,11 +74,10 @@ func (u *UsersDelivery) CreateUser(w http.ResponseWriter, r *http.Request) {
 			ErrorMessage: err.Error(),
 		})
 
-		u.log.Error("[ UsersDelivery.CreateUser ] Ошибка при создании сессии ",
+		u.log.Error("[UsersDelivery.CreateUser] Session create error",
 			slog.String("error", err.Error()),
 			slog.Any("userId", usersDefaultResponse.UserId),
 		)
-
 		return
 	}
 
